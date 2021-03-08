@@ -2,9 +2,11 @@ extern crate tesseract_sys;
 extern crate thiserror;
 
 use self::tesseract_sys::{
-    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetHOCRText, TessBaseAPIGetUTF8Text,
-    TessBaseAPIInit3, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
-    TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
+    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText, TessBaseAPIGetHOCRText,
+    TessBaseAPIGetInputImage, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
+    TessBaseAPIGetUTF8Text, TessBaseAPIInit3, TessBaseAPIRecognize, TessBaseAPISetImage,
+    TessBaseAPISetImage2, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
+    TessBaseAPISetVariable,
 };
 use self::thiserror::Error;
 use crate::Text;
@@ -15,6 +17,7 @@ use std::os::raw::c_int;
 use std::ptr;
 
 /// Wrapper around [`tesseract::TessBaseAPI`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html)
+#[derive(Debug)]
 pub struct TessBaseAPI(*mut tesseract_sys::TessBaseAPI);
 
 impl Drop for TessBaseAPI {
@@ -58,6 +61,14 @@ pub enum TessBaseAPISetImageSafetyError {
     #[error("Image width exceeds bytes per line")]
     ImageWidthExceedsBytesPerLine(),
 }
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi get_alto_text returned null")]
+pub struct TessBaseAPIGetAltoTextError();
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi get_tsv_text returned null")]
+pub struct TessBaseAPIGetTsvTextError();
 
 impl TessBaseAPI {
     pub fn create() -> TessBaseAPI {
@@ -133,6 +144,8 @@ impl TessBaseAPI {
         Ok(())
     }
     /// Wrapper for [`SetSourceResolution`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a4ded6137507a4e8eb6ed4bea0b9648f4)
+    ///
+    /// Set the resolution of the source image in pixels per inch so font size information can be calculated in results. Call this after SetImage().
     pub fn set_source_resolution(&mut self, ppi: c_int) {
         unsafe {
             TessBaseAPISetSourceResolution(self.0, ppi);
@@ -140,6 +153,8 @@ impl TessBaseAPI {
     }
 
     /// Wrapper for [`SetVariable`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a2e09259c558c6d8e0f7e523cbaf5adf5)
+    ///
+    /// Warning! Everytime you use a `name` that isn't recognized by Tesseract, a few bytes of memory are leaked.
     pub fn set_variable(
         &mut self,
         name: &CStr,
@@ -191,6 +206,55 @@ impl TessBaseAPI {
         let ptr = unsafe { TessBaseAPIGetHOCRText(self.0, page) };
         if ptr.is_null() {
             Err(TessBaseAPIGetHOCRTextError {})
+        } else {
+            Ok(unsafe { Text::new(ptr) })
+        }
+    }
+
+    /// Wrapper for [`TessBaseAPIGetInputImage`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ad2c023e46bf634305b3ae8cd0c091a65)
+    pub fn get_input_image(&self) -> Option<leptonica_plumbing::BorrowedPix> {
+        let ptr = unsafe { TessBaseAPIGetInputImage(self.0) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { leptonica_plumbing::BorrowedPix::new(ptr) })
+        }
+    }
+
+    /// Wrapper for [`TessBaseAPIGetSourceYResolution`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a2996381d53d41e486b7fb77e071df8ad)
+    pub fn get_source_y_resolution(&self) -> c_int {
+        unsafe { TessBaseAPIGetSourceYResolution(self.0) }
+    }
+
+    /// Wrapper for [`TessBaseAPISetRectangle`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#aeda62b939bbf06f79ec628932a4fed77)
+    ///
+    /// Restrict recognition to a sub-rectangle of the image. Call after SetImage. Each SetRectangle clears the recogntion results so multiple rectangles can be recognized with the same image.
+    pub fn set_rectangle(&mut self, left: c_int, top: c_int, width: c_int, height: c_int) {
+        unsafe { TessBaseAPISetRectangle(self.0, left, top, width, height) }
+    }
+
+    /// Wrapper for [`TessBaseAPIGetAltoText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a37b6dad313c531901dcca9de5ccb37b3)
+    ///
+    /// Make an XML-formatted string with Alto markup from the internal data structures.
+    pub fn get_alto_text(
+        &mut self,
+        page_number: c_int,
+    ) -> Result<Text, TessBaseAPIGetAltoTextError> {
+        let ptr = unsafe { TessBaseAPIGetAltoText(self.0, page_number) };
+        if ptr.is_null() {
+            Err(TessBaseAPIGetAltoTextError {})
+        } else {
+            Ok(unsafe { Text::new(ptr) })
+        }
+    }
+
+    /// Wrapper for [`TessBaseAPIGetTsvText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ac53c7f530eca78b348d84ef4348103f5)
+    ///
+    /// Make a TSV-formatted string from the internal data structures. page_number is 0-based but will appear in the output as 1-based.
+    pub fn get_tsv_text(&mut self, page_number: c_int) -> Result<Text, TessBaseAPIGetTsvTextError> {
+        let ptr = unsafe { TessBaseAPIGetTsvText(self.0, page_number) };
+        if ptr.is_null() {
+            Err(TessBaseAPIGetTsvTextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
