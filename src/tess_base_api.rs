@@ -3,10 +3,10 @@ extern crate thiserror;
 
 use self::tesseract_sys::{
     TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText, TessBaseAPIGetHOCRText,
-    TessBaseAPIGetInputImage, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
-    TessBaseAPIGetUTF8Text, TessBaseAPIInit3, TessBaseAPIRecognize, TessBaseAPISetImage,
-    TessBaseAPISetImage2, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
-    TessBaseAPISetVariable,
+    TessBaseAPIGetInputImage, TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution,
+    TessBaseAPIGetTsvText, TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit3,
+    TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
+    TessBaseAPISetRectangle, TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
 };
 use self::thiserror::Error;
 use crate::Text;
@@ -69,6 +69,14 @@ pub struct TessBaseAPIGetAltoTextError();
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_tsv_text returned null")]
 pub struct TessBaseAPIGetTsvTextError();
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi get_lstm_box_text returned null")]
+pub struct TessBaseAPIGetLSTMBoxTextError();
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi get_word_str_text returned null")]
+pub struct TessBaseAPIGetWordStrBoxTextError();
 
 impl TessBaseAPI {
     pub fn create() -> TessBaseAPI {
@@ -258,6 +266,47 @@ impl TessBaseAPI {
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
+    }
+
+    /// Wrapper for [`TessBaseAPIGetLSTMBoxText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a60205153043d51a977f1f4fb1923da18)
+    ///
+    /// Make a box file for LSTM training from the internal data structures. Constructs coordinates in the original image - not just the rectangle. page_number is a 0-based page index that will appear in the box file.
+    pub fn get_lstm_box_text(
+        &mut self,
+        page_number: c_int,
+    ) -> Result<Text, TessBaseAPIGetLSTMBoxTextError> {
+        let ptr = unsafe { TessBaseAPIGetLSTMBoxText(self.0, page_number) };
+        if ptr.is_null() {
+            Err(TessBaseAPIGetLSTMBoxTextError {})
+        } else {
+            Ok(unsafe { Text::new(ptr) })
+        }
+    }
+
+    /// Wrapper for [`TessBaseAPIGetWordStrBoxText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ab9938845c9b52434ee32a2225aad81cf)
+    ///
+    /// The recognized text is returned as a char* which is coded in the same format as a WordStr box file used in training. page_number is a 0-based page index that will appear in the box file. Returned string must be freed with the delete [] operator.
+    ///
+    /// Create a UTF8 box file with WordStr strings from the internal data structures. page_number is a 0-base page index that will appear in the box file.
+    pub fn get_word_str_box_text(
+        &mut self,
+        page_number: c_int,
+    ) -> Result<Text, TessBaseAPIGetWordStrBoxTextError> {
+        let ptr = unsafe { TessBaseAPIGetWordStrBoxText(self.0, page_number) };
+        if ptr.is_null() {
+            Err(TessBaseAPIGetWordStrBoxTextError {})
+        } else {
+            Ok(unsafe { Text::new(ptr) })
+        }
+    }
+
+    /// Wrapper for [`TessBaseAPIMeanTextConf`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a20c2c34197abc55043cb23be4e332ad0)
+    ///
+    /// Returns the (average) confidence value between 0 and 100.
+    ///
+    /// Returns the average word confidence for Tesseract page result.
+    pub fn mean_text_conf(&self) -> c_int {
+        unsafe { TessBaseAPIMeanTextConf(self.0) }
     }
 }
 
