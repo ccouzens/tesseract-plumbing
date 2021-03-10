@@ -347,6 +347,6 @@ fn set_variable_error_test() -> Result<(), Box<dyn std::error::Error>> {
     let fail = std::ffi::CString::new("fail")?;
     let mut tess = TessBaseAPI::create();
     tess.init_2(None, None)?;
-    assert!(tess.set_variable(&fail, &fail).is_ok());
+    assert!(tess.set_variable(&fail, &fail).is_err());
     Ok(())
 }
