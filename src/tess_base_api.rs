@@ -4,9 +4,10 @@ extern crate thiserror;
 use self::tesseract_sys::{
     TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText, TessBaseAPIGetHOCRText,
     TessBaseAPIGetInputImage, TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution,
-    TessBaseAPIGetTsvText, TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit3,
-    TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
-    TessBaseAPISetRectangle, TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
+    TessBaseAPIGetTsvText, TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2,
+    TessBaseAPIInit3, TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage,
+    TessBaseAPISetImage2, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
+    TessBaseAPISetVariable, TessOcrEngineMode,
 };
 use self::thiserror::Error;
 use crate::Text;
@@ -96,6 +97,28 @@ impl TessBaseAPI {
                 self.0,
                 datapath.map(CStr::as_ptr).unwrap_or_else(ptr::null),
                 language.map(CStr::as_ptr).unwrap_or_else(ptr::null),
+            )
+        };
+        if ret == 0 {
+            Ok(())
+        } else {
+            Err(TessBaseAPIInitError {})
+        }
+    }
+
+    /// Wrapper for [`Init-4`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a6d0956a66158ead4e3a86c7f50dad56e)
+    pub fn init_4(
+        &mut self,
+        datapath: Option<&CStr>,
+        language: Option<&CStr>,
+        oem: TessOcrEngineMode,
+    ) -> Result<(), TessBaseAPIInitError> {
+        let ret = unsafe {
+            TessBaseAPIInit2(
+                self.0,
+                datapath.map(CStr::as_ptr).unwrap_or_else(ptr::null),
+                language.map(CStr::as_ptr).unwrap_or_else(ptr::null),
+                oem,
             )
         };
         if ret == 0 {
