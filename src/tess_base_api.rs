@@ -19,15 +19,15 @@ use std::ptr;
 
 /// Wrapper around [`tesseract::TessBaseAPI`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html)
 #[derive(Debug)]
-pub struct TessBaseAPI(*mut tesseract_sys::TessBaseAPI);
+pub struct TessBaseApi(*mut tesseract_sys::TessBaseAPI);
 
-impl Drop for TessBaseAPI {
+impl Drop for TessBaseApi {
     fn drop(&mut self) {
         unsafe { TessBaseAPIDelete(self.0) }
     }
 }
 
-impl Default for TessBaseAPI {
+impl Default for TessBaseApi {
     fn default() -> Self {
         Self::create()
     }
@@ -35,26 +35,26 @@ impl Default for TessBaseAPI {
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi failed to initialize")]
-pub struct TessBaseAPIInitError();
+pub struct TessBaseApiInitError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi failed to set variable")]
-pub struct TessBaseAPISetVariableError();
+pub struct TessBaseApiSetVariableError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi failed to recognize")]
-pub struct TessBaseAPIRecogniseError();
+pub struct TessBaseApiRecogniseError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_hocr_text returned null")]
-pub struct TessBaseAPIGetHOCRTextError();
+pub struct TessBaseApiGetHocrTextError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_utf8_text returned null")]
-pub struct TessBaseAPIGetUTF8TextError();
+pub struct TessBaseApiGetUtf8TextError();
 
 #[derive(Debug, Error, PartialEq)]
-pub enum TessBaseAPISetImageSafetyError {
+pub enum TessBaseApiSetImageSafetyError {
     #[error("Image dimensions exceed computer memory")]
     DimensionsExceedMemory(),
     #[error("Image dimensions exceed image size")]
@@ -65,23 +65,23 @@ pub enum TessBaseAPISetImageSafetyError {
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_alto_text returned null")]
-pub struct TessBaseAPIGetAltoTextError();
+pub struct TessBaseApiGetAltoTextError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_tsv_text returned null")]
-pub struct TessBaseAPIGetTsvTextError();
+pub struct TessBaseApiGetTsvTextError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_lstm_box_text returned null")]
-pub struct TessBaseAPIGetLSTMBoxTextError();
+pub struct TessBaseApiGetLstmBoxTextError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_word_str_text returned null")]
-pub struct TessBaseAPIGetWordStrBoxTextError();
+pub struct TessBaseApiGetWordStrBoxTextError();
 
-impl TessBaseAPI {
-    pub fn create() -> TessBaseAPI {
-        TessBaseAPI(unsafe { TessBaseAPICreate() })
+impl TessBaseApi {
+    pub fn create() -> Self {
+        Self(unsafe { TessBaseAPICreate() })
     }
 
     /// Wrapper for [`Init-2`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a965ef2ff51c440756519a3d6f755f34f)
@@ -91,7 +91,7 @@ impl TessBaseAPI {
         &mut self,
         datapath: Option<&CStr>,
         language: Option<&CStr>,
-    ) -> Result<(), TessBaseAPIInitError> {
+    ) -> Result<(), TessBaseApiInitError> {
         let ret = unsafe {
             TessBaseAPIInit3(
                 self.0,
@@ -102,7 +102,7 @@ impl TessBaseAPI {
         if ret == 0 {
             Ok(())
         } else {
-            Err(TessBaseAPIInitError {})
+            Err(TessBaseApiInitError {})
         }
     }
 
@@ -112,7 +112,7 @@ impl TessBaseAPI {
         datapath: Option<&CStr>,
         language: Option<&CStr>,
         oem: TessOcrEngineMode,
-    ) -> Result<(), TessBaseAPIInitError> {
+    ) -> Result<(), TessBaseApiInitError> {
         let ret = unsafe {
             TessBaseAPIInit2(
                 self.0,
@@ -124,7 +124,7 @@ impl TessBaseAPI {
         if ret == 0 {
             Ok(())
         } else {
-            Err(TessBaseAPIInitError {})
+            Err(TessBaseApiInitError {})
         }
     }
 
@@ -143,22 +143,22 @@ impl TessBaseAPI {
         height: c_int,
         bytes_per_pixel: c_int,
         bytes_per_line: c_int,
-    ) -> Result<(), TessBaseAPISetImageSafetyError> {
+    ) -> Result<(), TessBaseApiSetImageSafetyError> {
         let claimed_image_size: usize = (height * bytes_per_line)
             .try_into()
-            .map_err(|_| TessBaseAPISetImageSafetyError::DimensionsExceedMemory())?;
+            .map_err(|_| TessBaseApiSetImageSafetyError::DimensionsExceedMemory())?;
         if claimed_image_size > image_data.len() {
-            return Err(TessBaseAPISetImageSafetyError::DimensionsExceedImageSize());
+            return Err(TessBaseApiSetImageSafetyError::DimensionsExceedImageSize());
         }
         match bytes_per_pixel {
             0 => {
                 if width > bytes_per_line * 8 {
-                    return Err(TessBaseAPISetImageSafetyError::ImageWidthExceedsBytesPerLine());
+                    return Err(TessBaseApiSetImageSafetyError::ImageWidthExceedsBytesPerLine());
                 }
             }
             _ => {
                 if width * bytes_per_pixel > bytes_per_line {
-                    return Err(TessBaseAPISetImageSafetyError::ImageWidthExceedsBytesPerLine());
+                    return Err(TessBaseApiSetImageSafetyError::ImageWidthExceedsBytesPerLine());
                 }
             }
         }
@@ -190,11 +190,11 @@ impl TessBaseAPI {
         &mut self,
         name: &CStr,
         value: &CStr,
-    ) -> Result<(), TessBaseAPISetVariableError> {
+    ) -> Result<(), TessBaseApiSetVariableError> {
         let ret = unsafe { TessBaseAPISetVariable(self.0, name.as_ptr(), value.as_ptr()) };
         match ret {
             1 => Ok(()),
-            _ => Err(TessBaseAPISetVariableError {}),
+            _ => Err(TessBaseApiSetVariableError {}),
         }
     }
     /// Wrapper for [`Recognize`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a0e4065c20b142d69a2324ee0c74ae0b0)
@@ -203,11 +203,11 @@ impl TessBaseAPI {
     /// It is currently unclear to me what would make it error.
     ///
     /// It could take a progress argument (`monitor`). If there is appetite for this, let me know and I could try and implement it.
-    pub fn recognize(&mut self) -> Result<(), TessBaseAPIRecogniseError> {
+    pub fn recognize(&mut self) -> Result<(), TessBaseApiRecogniseError> {
         let ret = unsafe { TessBaseAPIRecognize(self.0, ptr::null_mut()) };
         match ret {
             0 => Ok(()),
-            _ => Err(TessBaseAPIRecogniseError {}),
+            _ => Err(TessBaseApiRecogniseError {}),
         }
     }
     /// Wrapper for [`GetUTF8Text`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a115ef656f83352ba608b4f0bf9cfa2c4)
@@ -217,10 +217,10 @@ impl TessBaseAPI {
     /// Can return an error (null pointer), but it is not clear to me what would cause this.
     ///
     /// This will implicitly call `recognize` if required.
-    pub fn get_utf8_text(&mut self) -> Result<Text, TessBaseAPIGetUTF8TextError> {
+    pub fn get_utf8_text(&mut self) -> Result<Text, TessBaseApiGetUtf8TextError> {
         let ptr = unsafe { TessBaseAPIGetUTF8Text(self.0) };
         if ptr.is_null() {
-            Err(TessBaseAPIGetUTF8TextError {})
+            Err(TessBaseApiGetUtf8TextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
@@ -233,10 +233,10 @@ impl TessBaseAPI {
     /// Can return an error (null pointer), but it is not clear to me what would cause this.
     ///
     /// This will implicitly call `recognize` if required.
-    pub fn get_hocr_text(&mut self, page: c_int) -> Result<Text, TessBaseAPIGetHOCRTextError> {
+    pub fn get_hocr_text(&mut self, page: c_int) -> Result<Text, TessBaseApiGetHocrTextError> {
         let ptr = unsafe { TessBaseAPIGetHOCRText(self.0, page) };
         if ptr.is_null() {
-            Err(TessBaseAPIGetHOCRTextError {})
+            Err(TessBaseApiGetHocrTextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
@@ -270,10 +270,10 @@ impl TessBaseAPI {
     pub fn get_alto_text(
         &mut self,
         page_number: c_int,
-    ) -> Result<Text, TessBaseAPIGetAltoTextError> {
+    ) -> Result<Text, TessBaseApiGetAltoTextError> {
         let ptr = unsafe { TessBaseAPIGetAltoText(self.0, page_number) };
         if ptr.is_null() {
-            Err(TessBaseAPIGetAltoTextError {})
+            Err(TessBaseApiGetAltoTextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
@@ -282,10 +282,10 @@ impl TessBaseAPI {
     /// Wrapper for [`TessBaseAPIGetTsvText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ac53c7f530eca78b348d84ef4348103f5)
     ///
     /// Make a TSV-formatted string from the internal data structures. page_number is 0-based but will appear in the output as 1-based.
-    pub fn get_tsv_text(&mut self, page_number: c_int) -> Result<Text, TessBaseAPIGetTsvTextError> {
+    pub fn get_tsv_text(&mut self, page_number: c_int) -> Result<Text, TessBaseApiGetTsvTextError> {
         let ptr = unsafe { TessBaseAPIGetTsvText(self.0, page_number) };
         if ptr.is_null() {
-            Err(TessBaseAPIGetTsvTextError {})
+            Err(TessBaseApiGetTsvTextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
@@ -297,10 +297,10 @@ impl TessBaseAPI {
     pub fn get_lstm_box_text(
         &mut self,
         page_number: c_int,
-    ) -> Result<Text, TessBaseAPIGetLSTMBoxTextError> {
+    ) -> Result<Text, TessBaseApiGetLstmBoxTextError> {
         let ptr = unsafe { TessBaseAPIGetLSTMBoxText(self.0, page_number) };
         if ptr.is_null() {
-            Err(TessBaseAPIGetLSTMBoxTextError {})
+            Err(TessBaseApiGetLstmBoxTextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
@@ -314,10 +314,10 @@ impl TessBaseAPI {
     pub fn get_word_str_box_text(
         &mut self,
         page_number: c_int,
-    ) -> Result<Text, TessBaseAPIGetWordStrBoxTextError> {
+    ) -> Result<Text, TessBaseApiGetWordStrBoxTextError> {
         let ptr = unsafe { TessBaseAPIGetWordStrBoxText(self.0, page_number) };
         if ptr.is_null() {
-            Err(TessBaseAPIGetWordStrBoxTextError {})
+            Err(TessBaseApiGetWordStrBoxTextError {})
         } else {
             Ok(unsafe { Text::new(ptr) })
         }
@@ -336,7 +336,7 @@ impl TessBaseAPI {
 #[test]
 fn set_image_1_safety_test() {
     use image::GenericImageView;
-    let mut tess = TessBaseAPI::create();
+    let mut tess = TessBaseApi::create();
     tess.init_2(None, None).unwrap();
     let img = image::open("image.png").unwrap();
     assert_eq!(
@@ -352,23 +352,23 @@ fn set_image_1_safety_test() {
     assert_eq!(tess.set_image(&[0, 0, 0, 0], 2, 2, 1, 2), Ok(()));
     assert_eq!(
         tess.set_image(&[0, 0, 0], 2, 2, 1, 2),
-        Err(TessBaseAPISetImageSafetyError::DimensionsExceedImageSize())
+        Err(TessBaseApiSetImageSafetyError::DimensionsExceedImageSize())
     );
     assert_eq!(
         tess.set_image(&[0, 0, 0, 0], 2, 2, 1, 1),
-        Err(TessBaseAPISetImageSafetyError::ImageWidthExceedsBytesPerLine())
+        Err(TessBaseApiSetImageSafetyError::ImageWidthExceedsBytesPerLine())
     );
     assert_eq!(tess.set_image(&[0, 0, 0, 0], 16, 2, 0, 2), Ok(()));
     assert_eq!(
         tess.set_image(&[0, 0, 0, 0], 17, 2, 0, 2),
-        Err(TessBaseAPISetImageSafetyError::ImageWidthExceedsBytesPerLine())
+        Err(TessBaseApiSetImageSafetyError::ImageWidthExceedsBytesPerLine())
     );
 }
 
 #[test]
 fn set_variable_error_test() -> Result<(), Box<dyn std::error::Error>> {
     let fail = std::ffi::CString::new("fail")?;
-    let mut tess = TessBaseAPI::create();
+    let mut tess = TessBaseApi::create();
     tess.init_2(None, None)?;
     assert!(tess.set_variable(&fail, &fail).is_err());
     Ok(())
