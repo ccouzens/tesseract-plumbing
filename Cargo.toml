@@ -1,6 +1,6 @@
 [package]
 name = "tesseract-plumbing"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Chris Couzens <ccouzens@gmail.com>"]
 edition = "2018"
 description = "Safe wrapper of `tesseract-sys`"
@@ -11,7 +11,7 @@ keywords = ["leptonica", "tesseract", "ocr", "image"]
 license = "MIT"
 [dependencies]
 tesseract-sys = "0.5.5"
-leptonica-plumbing = "0.1.0"
+leptonica-plumbing = "0.2.0"
 thiserror = "1.0"
 
 [dev-dependencies]

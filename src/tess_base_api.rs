@@ -2,12 +2,13 @@ extern crate tesseract_sys;
 extern crate thiserror;
 
 use self::tesseract_sys::{
-    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText, TessBaseAPIGetHOCRText,
-    TessBaseAPIGetInputImage, TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution,
-    TessBaseAPIGetTsvText, TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2,
-    TessBaseAPIInit3, TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage,
-    TessBaseAPISetImage2, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
-    TessBaseAPISetVariable, TessOcrEngineMode,
+    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText, TessBaseAPIGetComponentImages,
+    TessBaseAPIGetHOCRText, TessBaseAPIGetInputImage, TessBaseAPIGetLSTMBoxText,
+    TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText, TessBaseAPIGetUTF8Text,
+    TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3, TessBaseAPIMeanTextConf,
+    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2, TessBaseAPISetRectangle,
+    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessOcrEngineMode,
+    TessPageIteratorLevel,
 };
 use self::thiserror::Error;
 use crate::Text;
@@ -78,6 +79,10 @@ pub struct TessBaseApiGetLstmBoxTextError();
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_word_str_text returned null")]
 pub struct TessBaseApiGetWordStrBoxTextError();
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi get_component_images returned null")]
+pub struct TessBaseApiGetComponentImagesError();
 
 impl TessBaseApi {
     pub fn create() -> Self {
@@ -330,6 +335,30 @@ impl TessBaseApi {
     /// Returns the average word confidence for Tesseract page result.
     pub fn mean_text_conf(&self) -> c_int {
         unsafe { TessBaseAPIMeanTextConf(self.0) }
+    }
+
+    /// Wrapper for [`GetComponentImages 1/2`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#ad74ae1266a5299734ec6f5225b6cb5c1)
+    ///
+    /// Get the given level kind of components (block, textline, word etc.) as a leptonica-style Boxa, Pixa pair, in reading order.
+    pub fn get_component_images_1(
+        &self,
+        level: TessPageIteratorLevel,
+        text_only: c_int,
+    ) -> Result<leptonica_plumbing::Boxa, TessBaseApiGetComponentImagesError> {
+        let ptr = unsafe {
+            TessBaseAPIGetComponentImages(
+                self.0,
+                level,
+                text_only,
+                ptr::null_mut(),
+                ptr::null_mut(),
+            )
+        };
+        if ptr.is_null() {
+            Err(TessBaseApiGetComponentImagesError {})
+        } else {
+            Ok(unsafe { leptonica_plumbing::Boxa::new_from_pointer(ptr) })
+        }
     }
 }
 
