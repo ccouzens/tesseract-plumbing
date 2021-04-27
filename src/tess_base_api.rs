@@ -22,6 +22,8 @@ use std::ptr;
 #[derive(Debug)]
 pub struct TessBaseApi(*mut tesseract_sys::TessBaseAPI);
 
+unsafe impl Send for TessBaseApi {}
+
 impl Drop for TessBaseApi {
     fn drop(&mut self) {
         unsafe { TessBaseAPIDelete(self.0) }

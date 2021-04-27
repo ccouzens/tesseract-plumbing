@@ -8,6 +8,8 @@ use std::os::raw::c_char;
 /// Wrapper around Tesseract's returned strings
 pub struct Text(*mut c_char);
 
+unsafe impl Send for Text {}
+
 impl Drop for Text {
     fn drop(&mut self) {
         unsafe { TessDeleteText(self.0) }
