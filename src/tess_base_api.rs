@@ -2,21 +2,23 @@ extern crate tesseract_sys;
 extern crate thiserror;
 
 use self::tesseract_sys::{
-    TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText, TessBaseAPIGetComponentImages,
-    TessBaseAPIGetHOCRText, TessBaseAPIGetInputImage, TessBaseAPIGetLSTMBoxText,
-    TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText, TessBaseAPIGetUTF8Text,
-    TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3, TessBaseAPIMeanTextConf,
-    TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2, TessBaseAPISetRectangle,
-    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessOcrEngineMode,
-    TessPageIteratorLevel,
+    TessBaseAPIAllWordConfidences, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText,
+    TessBaseAPIGetComponentImages, TessBaseAPIGetHOCRText, TessBaseAPIGetInputImage,
+    TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
+    TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3,
+    TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
+    TessBaseAPISetRectangle, TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
+    TessDeleteIntArray, TessOcrEngineMode, TessPageIteratorLevel,
 };
 use self::thiserror::Error;
 use crate::Text;
 use leptonica_plumbing::Pix;
 use std::convert::TryInto;
 use std::ffi::CStr;
+use std::ops::{Deref, DerefMut};
 use std::os::raw::c_int;
 use std::ptr;
+use std::slice;
 
 /// Wrapper around [`tesseract::TessBaseAPI`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html)
 #[derive(Debug)]
@@ -85,6 +87,44 @@ pub struct TessBaseApiGetWordStrBoxTextError();
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_component_images returned null")]
 pub struct TessBaseApiGetComponentImagesError();
+
+#[derive(Debug, Error)]
+#[error("TessBaseApi all_word_confidences returned null")]
+pub struct TessBaseApiAllWordConfidencesError();
+
+pub struct AllWordConfidences(*mut c_int, usize);
+
+impl AllWordConfidences {
+    pub fn as_slice(&self) -> &[c_int] {
+        self
+    }
+
+    pub fn as_slice_mut(&mut self) -> &mut [c_int] {
+        self
+    }
+}
+
+impl Deref for AllWordConfidences {
+    type Target = [c_int];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { slice::from_raw_parts(self.0, self.1) }
+    }
+}
+
+impl DerefMut for AllWordConfidences {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { slice::from_raw_parts_mut(self.0, self.1) }
+    }
+}
+
+impl Drop for AllWordConfidences {
+    fn drop(&mut self) {
+        unsafe {
+            TessDeleteIntArray(self.0);
+        }
+    }
+}
 
 impl TessBaseApi {
     pub fn create() -> Self {
@@ -337,6 +377,27 @@ impl TessBaseApi {
     /// Returns the average word confidence for Tesseract page result.
     pub fn mean_text_conf(&self) -> c_int {
         unsafe { TessBaseAPIMeanTextConf(self.0) }
+    }
+
+    /// Wrapper for [`TessBaseAPIAllWordConfidences`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a7e35b5ec11f2e38e00b9fe1126cb5c66)
+    ///
+    /// Returns a slice of confidences for each word in the result.
+    pub fn all_word_confidences(
+        &self,
+    ) -> Result<AllWordConfidences, TessBaseApiAllWordConfidencesError> {
+        let ptr = unsafe { TessBaseAPIAllWordConfidences(self.0) };
+        if ptr.is_null() {
+            Err(TessBaseApiAllWordConfidencesError {})
+        } else {
+            let mut end = ptr;
+            unsafe {
+                while *end != -1 {
+                    end = end.add(1);
+                }
+                let len = end.offset_from(ptr);
+                Ok(AllWordConfidences(ptr, len as usize))
+            }
+        }
     }
 
     /// Wrapper for [`GetComponentImages 1/2`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#ad74ae1266a5299734ec6f5225b6cb5c1)
