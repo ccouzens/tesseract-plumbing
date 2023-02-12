@@ -290,12 +290,18 @@ impl TessBaseApi {
     }
 
     /// Wrapper for [`TessBaseAPIGetInputImage`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ad2c023e46bf634305b3ae8cd0c091a65)
-    pub fn get_input_image(&self) -> Option<leptonica_plumbing::BorrowedPix> {
+    pub fn get_input_image(
+        &self,
+    ) -> Option<leptonica_plumbing::memory::BorrowedFrom<leptonica_plumbing::Pix>> {
         let ptr = unsafe { TessBaseAPIGetInputImage(self.0) };
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { leptonica_plumbing::BorrowedPix::new(ptr) })
+            Some(unsafe {
+                leptonica_plumbing::memory::BorrowedFrom::new(
+                    leptonica_plumbing::Pix::new_from_pointer(ptr),
+                )
+            })
         }
     }
 
@@ -407,7 +413,10 @@ impl TessBaseApi {
         &self,
         level: TessPageIteratorLevel,
         text_only: c_int,
-    ) -> Result<leptonica_plumbing::Boxa, TessBaseApiGetComponentImagesError> {
+    ) -> Result<
+        leptonica_plumbing::memory::RefCountedExclusive<leptonica_plumbing::Boxa>,
+        TessBaseApiGetComponentImagesError,
+    > {
         let ptr = unsafe {
             TessBaseAPIGetComponentImages(
                 self.0,
@@ -420,7 +429,11 @@ impl TessBaseApi {
         if ptr.is_null() {
             Err(TessBaseApiGetComponentImagesError {})
         } else {
-            Ok(unsafe { leptonica_plumbing::Boxa::new_from_pointer(ptr) })
+            Ok(unsafe {
+                leptonica_plumbing::memory::RefCountedExclusive::new(
+                    leptonica_plumbing::Boxa::new_from_pointer(ptr),
+                )
+            })
         }
     }
 }
