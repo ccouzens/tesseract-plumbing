@@ -7,8 +7,9 @@ use self::tesseract_sys::{
     TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
     TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3,
     TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
-    TessBaseAPISetRectangle, TessBaseAPISetSourceResolution, TessBaseAPISetVariable,
-    TessDeleteIntArray, TessOcrEngineMode, TessPageIteratorLevel,
+    TessBaseAPISetPageSegMode, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
+    TessBaseAPISetVariable, TessDeleteIntArray, TessOcrEngineMode, TessPageIteratorLevel,
+    TessPageSegMode,
 };
 use self::thiserror::Error;
 use crate::Text;
@@ -244,6 +245,14 @@ impl TessBaseApi {
             _ => Err(TessBaseApiSetVariableError {}),
         }
     }
+
+    /// Wrapper for [`SetPageSegMode`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a15a7a9c1afbba3078a55b4566de891ab)
+    ///
+    /// Set the current page segmentation mode
+    pub fn set_page_seg_mode(&mut self, mode: TessPageSegMode) {
+        unsafe { TessBaseAPISetPageSegMode(self.0, mode) };
+    }
+
     /// Wrapper for [`Recognize`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a0e4065c20b142d69a2324ee0c74ae0b0)
     ///
     /// Recognize the image. Returns `Ok(())` on success and `Err(())` otherwise.
