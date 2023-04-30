@@ -5,7 +5,7 @@ use self::tesseract_sys::{
     TessBaseAPIAllWordConfidences, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText,
     TessBaseAPIGetComponentImages, TessBaseAPIGetHOCRText, TessBaseAPIGetInputImage,
     TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
-    TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3,
+    TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3, TessBaseAPIInit5,
     TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
     TessBaseAPISetPageSegMode, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
     TessBaseAPISetVariable, TessDeleteIntArray, TessOcrEngineMode, TessPageIteratorLevel,
@@ -130,6 +130,35 @@ impl Drop for AllWordConfidences {
 impl TessBaseApi {
     pub fn create() -> Self {
         Self(unsafe { TessBaseAPICreate() })
+    }
+
+    /// Wrapper for [`Init-1`]https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a2be07b4c9449b8cfc43e9c26ee623050
+    pub fn init_1(
+        &mut self,
+        data: &[u8],
+        language: Option<&CStr>,
+        oem: TessOcrEngineMode,
+    ) -> Result<(), TessBaseApiInitError> {
+        let ret = unsafe {
+            TessBaseAPIInit5(
+                self.0,
+                data.as_ptr().cast(),
+                data.len() as i32,
+                language.map(CStr::as_ptr).unwrap_or_else(ptr::null),
+                oem,
+                ptr::null_mut(),
+                0,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                0,
+                0
+            )
+        };
+        if ret == 0 {
+            Ok(())
+        } else {
+            Err(TessBaseApiInitError {})
+        }
     }
 
     /// Wrapper for [`Init-2`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a965ef2ff51c440756519a3d6f755f34f)
