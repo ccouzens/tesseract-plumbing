@@ -143,7 +143,7 @@ impl TessBaseApi {
             TessBaseAPIInit5(
                 self.0,
                 data.as_ptr().cast(),
-                data.len() as i32,
+                data.len() as c_int,
                 language.map(CStr::as_ptr).unwrap_or_else(ptr::null),
                 oem,
                 ptr::null_mut(),
