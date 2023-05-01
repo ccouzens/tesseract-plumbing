@@ -5,11 +5,11 @@ use self::tesseract_sys::{
     TessBaseAPIAllWordConfidences, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText,
     TessBaseAPIGetComponentImages, TessBaseAPIGetHOCRText, TessBaseAPIGetInputImage,
     TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
-    TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3, TessBaseAPIInit5,
-    TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
-    TessBaseAPISetPageSegMode, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
-    TessBaseAPISetVariable, TessDeleteIntArray, TessOcrEngineMode, TessPageIteratorLevel,
-    TessPageSegMode,
+    TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3,
+    TessBaseAPIInit5, TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage,
+    TessBaseAPISetImage2, TessBaseAPISetPageSegMode, TessBaseAPISetRectangle,
+    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessDeleteIntArray, TessOcrEngineMode,
+    TessPageIteratorLevel, TessPageSegMode,
 };
 use self::thiserror::Error;
 use crate::Text;
@@ -151,7 +151,7 @@ impl TessBaseApi {
                 ptr::null_mut(),
                 ptr::null_mut(),
                 0,
-                0
+                0,
             )
         };
         if ret == 0 {
