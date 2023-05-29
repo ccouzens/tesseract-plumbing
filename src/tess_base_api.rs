@@ -1,16 +1,19 @@
 extern crate tesseract_sys;
 extern crate thiserror;
 
+#[cfg(feature = "tesseract_5_2")]
+use self::tesseract_sys::TessBaseAPIInit5;
 use self::tesseract_sys::{
     TessBaseAPIAllWordConfidences, TessBaseAPICreate, TessBaseAPIDelete, TessBaseAPIGetAltoText,
     TessBaseAPIGetComponentImages, TessBaseAPIGetHOCRText, TessBaseAPIGetInputImage,
     TessBaseAPIGetLSTMBoxText, TessBaseAPIGetSourceYResolution, TessBaseAPIGetTsvText,
     TessBaseAPIGetUTF8Text, TessBaseAPIGetWordStrBoxText, TessBaseAPIInit2, TessBaseAPIInit3,
-    TessBaseAPIInit5, TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage,
-    TessBaseAPISetImage2, TessBaseAPISetPageSegMode, TessBaseAPISetRectangle,
-    TessBaseAPISetSourceResolution, TessBaseAPISetVariable, TessDeleteIntArray, TessOcrEngineMode,
-    TessPageIteratorLevel, TessPageSegMode,
+    TessBaseAPIMeanTextConf, TessBaseAPIRecognize, TessBaseAPISetImage, TessBaseAPISetImage2,
+    TessBaseAPISetPageSegMode, TessBaseAPISetRectangle, TessBaseAPISetSourceResolution,
+    TessBaseAPISetVariable, TessDeleteIntArray, TessOcrEngineMode, TessPageIteratorLevel,
+    TessPageSegMode,
 };
+
 use self::thiserror::Error;
 use crate::Text;
 use leptonica_plumbing::Pix;
@@ -132,6 +135,7 @@ impl TessBaseApi {
         Self(unsafe { TessBaseAPICreate() })
     }
 
+    #[cfg(feature = "tesseract_5_2")]
     /// Wrapper for [`Init-1`]https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a2be07b4c9449b8cfc43e9c26ee623050
     pub fn init_1(
         &mut self,

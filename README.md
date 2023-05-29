@@ -9,6 +9,10 @@ This is designed to expose the C API of
 Adding value by deviating from the API is a non-goal. That is left to libraries
 that build on top of `tesseract-plumbing`.
 
+## Requirements/Features
+
+Requires Tesseract version `5.2.0` or newer by default. Use `--no-default-features` if using an older version.
+
 ## Motivation
 
 I'm a maintainer of both [leptess](https://crates.io/crates/leptess) and
