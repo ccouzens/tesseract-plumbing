@@ -135,6 +135,10 @@ impl TessBaseApi {
         Self(unsafe { TessBaseAPICreate() })
     }
 
+    pub fn get_raw(&self) -> *const tesseract_sys::TessBaseAPI {
+        self.0
+    }
+
     #[cfg(feature = "tesseract_5_2")]
     /// Wrapper for [`Init-1`]https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a2be07b4c9449b8cfc43e9c26ee623050
     pub fn init_1(
