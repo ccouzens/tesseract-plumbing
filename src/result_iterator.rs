@@ -1,4 +1,3 @@
-
 pub struct ResultIterator(*mut tesseract_sys::TessResultIterator);
 
 impl Drop for ResultIterator {
