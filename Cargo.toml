@@ -10,12 +10,12 @@ readme = "README.md"
 keywords = ["leptonica", "tesseract", "ocr", "image"]
 license = "MIT"
 [dependencies]
-tesseract-sys = "~0.5"
+tesseract-sys = "~0.6"
 leptonica-plumbing = "1.0"
 thiserror = "1.0"
 
 [dev-dependencies]
-image = "0.23.14"
+image = "0.24.7"
 
 [features]
 default = ["tesseract_5_2"]
