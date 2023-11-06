@@ -9,6 +9,7 @@ repository = "https://github.com/ccouzens/tesseract-plumbing"
 readme = "README.md"
 keywords = ["leptonica", "tesseract", "ocr", "image"]
 license = "MIT"
+
 [dependencies]
 tesseract-sys = "~0.6"
 leptonica-plumbing = "1.0"
