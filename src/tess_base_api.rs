@@ -486,7 +486,6 @@ impl TessBaseApi {
 
 #[test]
 fn set_image_1_safety_test() {
-    use image::GenericImageView;
     let mut tess = TessBaseApi::create();
     tess.init_2(None, None).unwrap();
     let img = image::open("image.png").unwrap();
