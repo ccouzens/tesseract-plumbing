@@ -15,7 +15,7 @@ use self::tesseract_sys::{
 };
 
 use self::thiserror::Error;
-use crate::Text;
+use crate::{Text, TextNewError};
 use leptonica_plumbing::Pix;
 use std::convert::TryInto;
 use std::ffi::CStr;
@@ -312,10 +312,9 @@ impl TessBaseApi {
     /// This will implicitly call `recognize` if required.
     pub fn get_utf8_text(&mut self) -> Result<Text, TessBaseApiGetUtf8TextError> {
         let ptr = unsafe { TessBaseAPIGetUTF8Text(self.0) };
-        if ptr.is_null() {
-            Err(TessBaseApiGetUtf8TextError {})
-        } else {
-            Ok(unsafe { Text::new(ptr) })
+        match unsafe { Text::new(ptr) } {
+            Ok(t) => Ok(t),
+            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetUtf8TextError {}),
         }
     }
 
@@ -328,10 +327,9 @@ impl TessBaseApi {
     /// This will implicitly call `recognize` if required.
     pub fn get_hocr_text(&mut self, page: c_int) -> Result<Text, TessBaseApiGetHocrTextError> {
         let ptr = unsafe { TessBaseAPIGetHOCRText(self.0, page) };
-        if ptr.is_null() {
-            Err(TessBaseApiGetHocrTextError {})
-        } else {
-            Ok(unsafe { Text::new(ptr) })
+        match unsafe { Text::new(ptr) } {
+            Ok(t) => Ok(t),
+            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetHocrTextError {}),
         }
     }
 
@@ -371,10 +369,9 @@ impl TessBaseApi {
         page_number: c_int,
     ) -> Result<Text, TessBaseApiGetAltoTextError> {
         let ptr = unsafe { TessBaseAPIGetAltoText(self.0, page_number) };
-        if ptr.is_null() {
-            Err(TessBaseApiGetAltoTextError {})
-        } else {
-            Ok(unsafe { Text::new(ptr) })
+        match unsafe { Text::new(ptr) } {
+            Ok(t) => Ok(t),
+            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetAltoTextError {}),
         }
     }
 
@@ -383,10 +380,9 @@ impl TessBaseApi {
     /// Make a TSV-formatted string from the internal data structures. page_number is 0-based but will appear in the output as 1-based.
     pub fn get_tsv_text(&mut self, page_number: c_int) -> Result<Text, TessBaseApiGetTsvTextError> {
         let ptr = unsafe { TessBaseAPIGetTsvText(self.0, page_number) };
-        if ptr.is_null() {
-            Err(TessBaseApiGetTsvTextError {})
-        } else {
-            Ok(unsafe { Text::new(ptr) })
+        match unsafe { Text::new(ptr) } {
+            Ok(t) => Ok(t),
+            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetTsvTextError {}),
         }
     }
 
@@ -398,10 +394,9 @@ impl TessBaseApi {
         page_number: c_int,
     ) -> Result<Text, TessBaseApiGetLstmBoxTextError> {
         let ptr = unsafe { TessBaseAPIGetLSTMBoxText(self.0, page_number) };
-        if ptr.is_null() {
-            Err(TessBaseApiGetLstmBoxTextError {})
-        } else {
-            Ok(unsafe { Text::new(ptr) })
+        match unsafe { Text::new(ptr) } {
+            Ok(t) => Ok(t),
+            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetLstmBoxTextError {}),
         }
     }
 
@@ -415,10 +410,9 @@ impl TessBaseApi {
         page_number: c_int,
     ) -> Result<Text, TessBaseApiGetWordStrBoxTextError> {
         let ptr = unsafe { TessBaseAPIGetWordStrBoxText(self.0, page_number) };
-        if ptr.is_null() {
-            Err(TessBaseApiGetWordStrBoxTextError {})
-        } else {
-            Ok(unsafe { Text::new(ptr) })
+        match unsafe { Text::new(ptr) } {
+            Ok(t) => Ok(t),
+            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetWordStrBoxTextError {}),
         }
     }
 

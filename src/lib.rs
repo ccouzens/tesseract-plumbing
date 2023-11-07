@@ -14,7 +14,7 @@ pub use tess_base_api::{
     TessBaseApiSetImageSafetyError, TessBaseApiSetVariableError,
 };
 pub use tesseract_sys;
-pub use text::Text;
+pub use text::{Text, TextNewError};
 
 /// Wrapper for [`Version`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a3785779c909fcdd77e24b340f5913e4b)
 ///

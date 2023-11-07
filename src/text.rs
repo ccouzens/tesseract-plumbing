@@ -1,10 +1,18 @@
 extern crate tesseract_sys;
+extern crate thiserror;
 
 use self::tesseract_sys::TessDeleteText;
+use self::thiserror::Error;
 use std::convert::AsRef;
 use std::ffi::CStr;
 use std::fmt::Display;
 use std::os::raw::c_char;
+
+#[derive(Debug, Error)]
+pub enum TextNewError {
+    #[error("Attempted to initialize with null pointer")]
+    NullPointer(),
+}
 
 /// Wrapper around Tesseract's returned strings
 #[derive(Debug)]
@@ -23,20 +31,17 @@ impl Text {
     ///
     /// This function should only be called with a valid string pointer from Tesseract.
     /// `TesseractText` will be responsible for freeing it.
-    pub unsafe fn new(raw: *mut c_char) -> Self {
-        Self(raw)
+    pub unsafe fn new(raw: *mut c_char) -> Result<Self, TextNewError> {
+        if raw.is_null() {
+            Err(TextNewError::NullPointer())
+        } else {
+            Ok(Self(raw))
+        }
     }
 }
 
 impl AsRef<CStr> for Text {
     fn as_ref(&self) -> &CStr {
-        if self.0.is_null() {
-            // TODO: This is a dumb hack.
-            // Tesseract may choose to return a null pointer for no text for some invalid states.
-            // This breaks one of the invariants on `from_ptr` and is invalid,
-            // so we return a static string with no characters.
-            return unsafe { CStr::from_ptr("\0".as_ptr().cast()) };
-        }
         unsafe { CStr::from_ptr(self.0) }
     }
 }
