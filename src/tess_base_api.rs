@@ -54,14 +54,6 @@ pub struct TessBaseApiSetVariableError();
 #[error("TessBaseApi failed to recognize")]
 pub struct TessBaseApiRecogniseError();
 
-#[derive(Debug, Error)]
-#[error("TessBaseApi get_hocr_text returned null")]
-pub struct TessBaseApiGetHocrTextError();
-
-#[derive(Debug, Error)]
-#[error("TessBaseApi get_utf8_text returned null")]
-pub struct TessBaseApiGetUtf8TextError();
-
 #[derive(Debug, Error, PartialEq)]
 pub enum TessBaseApiSetImageSafetyError {
     #[error("Image dimensions exceed computer memory")]
@@ -71,22 +63,6 @@ pub enum TessBaseApiSetImageSafetyError {
     #[error("Image width exceeds bytes per line")]
     ImageWidthExceedsBytesPerLine(),
 }
-
-#[derive(Debug, Error)]
-#[error("TessBaseApi get_alto_text returned null")]
-pub struct TessBaseApiGetAltoTextError();
-
-#[derive(Debug, Error)]
-#[error("TessBaseApi get_tsv_text returned null")]
-pub struct TessBaseApiGetTsvTextError();
-
-#[derive(Debug, Error)]
-#[error("TessBaseApi get_lstm_box_text returned null")]
-pub struct TessBaseApiGetLstmBoxTextError();
-
-#[derive(Debug, Error)]
-#[error("TessBaseApi get_word_str_text returned null")]
-pub struct TessBaseApiGetWordStrBoxTextError();
 
 #[derive(Debug, Error)]
 #[error("TessBaseApi get_component_images returned null")]
@@ -310,12 +286,8 @@ impl TessBaseApi {
     /// Can return an error (null pointer), but it is not clear to me what would cause this.
     ///
     /// This will implicitly call `recognize` if required.
-    pub fn get_utf8_text(&mut self) -> Result<Text, TessBaseApiGetUtf8TextError> {
-        let ptr = unsafe { TessBaseAPIGetUTF8Text(self.0) };
-        match unsafe { Text::new(ptr) } {
-            Ok(t) => Ok(t),
-            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetUtf8TextError {}),
-        }
+    pub fn get_utf8_text(&mut self) -> Result<Text, TextNewError> {
+        unsafe { Text::new(TessBaseAPIGetUTF8Text(self.0)) }
     }
 
     /// Wrapper for [`GetUTF8Text`](https://tesseract-ocr.github.io/tessapi/5.x/a02438.html#a655f906bbf64dcd6f33ce633ecce997d)
@@ -325,12 +297,8 @@ impl TessBaseApi {
     /// Can return an error (null pointer), but it is not clear to me what would cause this.
     ///
     /// This will implicitly call `recognize` if required.
-    pub fn get_hocr_text(&mut self, page: c_int) -> Result<Text, TessBaseApiGetHocrTextError> {
-        let ptr = unsafe { TessBaseAPIGetHOCRText(self.0, page) };
-        match unsafe { Text::new(ptr) } {
-            Ok(t) => Ok(t),
-            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetHocrTextError {}),
-        }
+    pub fn get_hocr_text(&mut self, page: c_int) -> Result<Text, TextNewError> {
+        unsafe { Text::new(TessBaseAPIGetHOCRText(self.0, page)) }
     }
 
     /// Wrapper for [`TessBaseAPIGetInputImage`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ad2c023e46bf634305b3ae8cd0c091a65)
@@ -364,40 +332,22 @@ impl TessBaseApi {
     /// Wrapper for [`TessBaseAPIGetAltoText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a37b6dad313c531901dcca9de5ccb37b3)
     ///
     /// Make an XML-formatted string with Alto markup from the internal data structures.
-    pub fn get_alto_text(
-        &mut self,
-        page_number: c_int,
-    ) -> Result<Text, TessBaseApiGetAltoTextError> {
-        let ptr = unsafe { TessBaseAPIGetAltoText(self.0, page_number) };
-        match unsafe { Text::new(ptr) } {
-            Ok(t) => Ok(t),
-            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetAltoTextError {}),
-        }
+    pub fn get_alto_text(&mut self, page_number: c_int) -> Result<Text, TextNewError> {
+        unsafe { Text::new(TessBaseAPIGetAltoText(self.0, page_number)) }
     }
 
     /// Wrapper for [`TessBaseAPIGetTsvText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ac53c7f530eca78b348d84ef4348103f5)
     ///
     /// Make a TSV-formatted string from the internal data structures. page_number is 0-based but will appear in the output as 1-based.
-    pub fn get_tsv_text(&mut self, page_number: c_int) -> Result<Text, TessBaseApiGetTsvTextError> {
-        let ptr = unsafe { TessBaseAPIGetTsvText(self.0, page_number) };
-        match unsafe { Text::new(ptr) } {
-            Ok(t) => Ok(t),
-            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetTsvTextError {}),
-        }
+    pub fn get_tsv_text(&mut self, page_number: c_int) -> Result<Text, TextNewError> {
+        unsafe { Text::new(TessBaseAPIGetTsvText(self.0, page_number)) }
     }
 
     /// Wrapper for [`TessBaseAPIGetLSTMBoxText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a60205153043d51a977f1f4fb1923da18)
     ///
     /// Make a box file for LSTM training from the internal data structures. Constructs coordinates in the original image - not just the rectangle. page_number is a 0-based page index that will appear in the box file.
-    pub fn get_lstm_box_text(
-        &mut self,
-        page_number: c_int,
-    ) -> Result<Text, TessBaseApiGetLstmBoxTextError> {
-        let ptr = unsafe { TessBaseAPIGetLSTMBoxText(self.0, page_number) };
-        match unsafe { Text::new(ptr) } {
-            Ok(t) => Ok(t),
-            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetLstmBoxTextError {}),
-        }
+    pub fn get_lstm_box_text(&mut self, page_number: c_int) -> Result<Text, TextNewError> {
+        unsafe { Text::new(TessBaseAPIGetLSTMBoxText(self.0, page_number)) }
     }
 
     /// Wrapper for [`TessBaseAPIGetWordStrBoxText`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#ab9938845c9b52434ee32a2225aad81cf)
@@ -405,15 +355,8 @@ impl TessBaseApi {
     /// The recognized text is returned as a char* which is coded in the same format as a WordStr box file used in training. page_number is a 0-based page index that will appear in the box file. Returned string must be freed with the delete [] operator.
     ///
     /// Create a UTF8 box file with WordStr strings from the internal data structures. page_number is a 0-base page index that will appear in the box file.
-    pub fn get_word_str_box_text(
-        &mut self,
-        page_number: c_int,
-    ) -> Result<Text, TessBaseApiGetWordStrBoxTextError> {
-        let ptr = unsafe { TessBaseAPIGetWordStrBoxText(self.0, page_number) };
-        match unsafe { Text::new(ptr) } {
-            Ok(t) => Ok(t),
-            Err(TextNewError::NullPointer()) => Err(TessBaseApiGetWordStrBoxTextError {}),
-        }
+    pub fn get_word_str_box_text(&mut self, page_number: c_int) -> Result<Text, TextNewError> {
+        unsafe { Text::new(TessBaseAPIGetWordStrBoxText(self.0, page_number)) }
     }
 
     /// Wrapper for [`TessBaseAPIMeanTextConf`](https://tesseract-ocr.github.io/tessapi/5.x/a00008.html#a20c2c34197abc55043cb23be4e332ad0)

@@ -8,10 +8,8 @@ pub use leptonica_plumbing::leptonica_sys;
 pub use result_iterator::ResultIterator;
 use std::ffi::CStr;
 pub use tess_base_api::{
-    TessBaseApi, TessBaseApiGetAltoTextError, TessBaseApiGetHocrTextError,
-    TessBaseApiGetLstmBoxTextError, TessBaseApiGetTsvTextError, TessBaseApiGetUtf8TextError,
-    TessBaseApiGetWordStrBoxTextError, TessBaseApiInitError, TessBaseApiRecogniseError,
-    TessBaseApiSetImageSafetyError, TessBaseApiSetVariableError,
+    TessBaseApi, TessBaseApiInitError, TessBaseApiRecogniseError, TessBaseApiSetImageSafetyError,
+    TessBaseApiSetVariableError,
 };
 pub use tesseract_sys;
 pub use text::{Text, TextNewError};
