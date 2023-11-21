@@ -3,7 +3,6 @@ extern crate thiserror;
 
 use self::tesseract_sys::TessDeleteText;
 use self::thiserror::Error;
-use std::convert::AsRef;
 use std::ffi::CStr;
 use std::fmt::Display;
 use std::os::raw::c_char;
@@ -38,22 +37,14 @@ impl Text {
             Ok(Self(raw))
         }
     }
-}
 
-impl AsRef<CStr> for Text {
-    fn as_ref(&self) -> &CStr {
+    fn to_cstr(&self) -> &CStr {
         unsafe { CStr::from_ptr(self.0) }
     }
 }
 
 impl Display for Text {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.as_ref()
-                .to_str()
-                .expect("Tesseract returned invalid UTF-8 str")
-        )
+        write!(f, "{}", self.to_cstr().to_string_lossy())
     }
 }

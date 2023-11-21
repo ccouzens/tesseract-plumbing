@@ -453,6 +453,32 @@ fn set_image_1_safety_test() {
 }
 
 #[test]
+fn ocr_image_test() {
+    let mut tess = TessBaseApi::create();
+    tess.init_2(
+        None,
+        Some(unsafe { CStr::from_ptr(b"eng\0".as_ptr().cast()) }),
+    )
+    .unwrap();
+    let img = image::open("image.png").unwrap();
+    assert_eq!(
+        tess.set_image(
+            img.as_rgba8().unwrap(),
+            img.width().try_into().unwrap(),
+            img.height().try_into().unwrap(),
+            4,
+            (img.width() * 4).try_into().unwrap()
+        ),
+        Ok(())
+    );
+
+    tess.recognize().unwrap();
+    let text = tess.get_utf8_text().unwrap();
+
+    assert_eq!(&format!("{}", text), "tesseract plumbing\n");
+}
+
+#[test]
 fn set_variable_error_test() -> Result<(), Box<dyn std::error::Error>> {
     let fail = std::ffi::CString::new("fail")?;
     let mut tess = TessBaseApi::create();
