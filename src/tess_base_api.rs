@@ -123,6 +123,10 @@ impl TessBaseApi {
         language: Option<&CStr>,
         oem: TessOcrEngineMode,
     ) -> Result<(), TessBaseApiInitError> {
+        if language.is_none() {
+            // https://github.com/tesseract-ocr/tesseract/issues/4028
+            panic!("null language would probably lead to a segmentation fault");
+        }
         let ret = unsafe {
             TessBaseAPIInit5(
                 self.0,
@@ -153,6 +157,10 @@ impl TessBaseApi {
         datapath: Option<&CStr>,
         language: Option<&CStr>,
     ) -> Result<(), TessBaseApiInitError> {
+        if language.is_none() {
+            // https://github.com/tesseract-ocr/tesseract/issues/4028
+            panic!("null language would probably lead to a segmentation fault");
+        }
         let ret = unsafe {
             TessBaseAPIInit3(
                 self.0,
@@ -174,6 +182,10 @@ impl TessBaseApi {
         language: Option<&CStr>,
         oem: TessOcrEngineMode,
     ) -> Result<(), TessBaseApiInitError> {
+        if language.is_none() {
+            // https://github.com/tesseract-ocr/tesseract/issues/4028
+            panic!("null language would probably lead to a segmentation fault");
+        }
         let ret = unsafe {
             TessBaseAPIInit2(
                 self.0,
@@ -424,7 +436,8 @@ impl TessBaseApi {
 #[test]
 fn set_image_1_safety_test() {
     let mut tess = TessBaseApi::create();
-    tess.init_2(None, None).unwrap();
+    tess.init_2(None, Some(CStr::from_bytes_with_nul(b"eng\0").unwrap()))
+        .unwrap();
     let img = image::open("image.png").unwrap();
     assert_eq!(
         tess.set_image(
@@ -455,11 +468,8 @@ fn set_image_1_safety_test() {
 #[test]
 fn ocr_image_test() {
     let mut tess = TessBaseApi::create();
-    tess.init_2(
-        None,
-        Some(unsafe { CStr::from_ptr(b"eng\0".as_ptr().cast()) }),
-    )
-    .unwrap();
+    tess.init_2(None, Some(CStr::from_bytes_until_nul(b"eng\0").unwrap()))
+        .unwrap();
     let img = image::open("image.png").unwrap();
     assert_eq!(
         tess.set_image(
@@ -482,7 +492,7 @@ fn ocr_image_test() {
 fn set_variable_error_test() -> Result<(), Box<dyn std::error::Error>> {
     let fail = std::ffi::CString::new("fail")?;
     let mut tess = TessBaseApi::create();
-    tess.init_2(None, None)?;
+    tess.init_2(None, Some(CStr::from_bytes_with_nul(b"eng\0").unwrap()))?;
     assert!(tess.set_variable(&fail, &fail).is_err());
     Ok(())
 }
